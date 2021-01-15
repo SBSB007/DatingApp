@@ -6,6 +6,7 @@ using API.Dtos;
 using API.Entities;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
 {
@@ -23,6 +24,8 @@ namespace API.Controllers
         {
             if (regiserDtos == null) throw new ArgumentNullException();
 
+            if (await UserAlreadyExisted(regiserDtos.UserName)) throw new Exception("User Already Existed");
+
             using var hmac = new HMACSHA512();
 
             var User = new AppUser
@@ -35,6 +38,11 @@ namespace API.Controllers
             _dataContext.AppUsers.Add(User);
             await _dataContext.SaveChangesAsync();
             return User;
+        }
+
+        private async Task<bool> UserAlreadyExisted(string username)
+        {
+            return await _dataContext.AppUsers.AnyAsync(appuser => appuser.UserName == username);
         }
     }
 }
